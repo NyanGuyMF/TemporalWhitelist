@@ -1,0 +1,9 @@
+name: TemporalWhitelist
+main: me.nyanguymf.TemporalWhitelist
+version: 1
+author: NyanGuyMF
+
+commands:
+  whlist:
+    description: Add player to whitelist
+    aliases: [wh, whitelist]
