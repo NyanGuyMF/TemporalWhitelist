@@ -70,7 +70,7 @@ public class Whitelist {
 
             String  added   = TemporalWhitelist.getMessage("added-successfuly");
                     added   = added.replaceAll("%player%", name); 
-                    added   = added.replaceAll("%until%", new Date(until).toString());
+                    added   = added.replaceAll("%until%", new Date(until * 1000).toString());
 
             sender.sendMessage(added);
         } catch (Exception e) {
