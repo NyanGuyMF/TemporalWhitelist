@@ -34,7 +34,6 @@ public class LoginListener implements Listener {
         String playerName = event.getName();
 
         if (!wh.isWhitelisted(playerName)) {
-            // TODO add config for messaging
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, TemporalWhitelist.getMessage("not-whitelisted"));
             return;
         }

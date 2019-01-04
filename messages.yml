@@ -15,7 +15,10 @@ add-usage: "§eCorrect usage: §c/whitelist add §f[§cplayer]§f §f[§ctime di
 remove-usage: "§eCorrect usage: §c/whitelist remove §f[§cplayer]§f"
 # displays if successfuly added player from whitelist
 # %player% for add player name; %until% for add until string
-added-successfuly: "§aSuccessfuly added %player% to whitelist until %until%"
+added-successfuly-until: "§aSuccessfuly added %player% to whitelist until %until%"
+# displays if successfuly added player from whitelist
+# %player% for add player name
+added-successfuly: "§aSuccessfuly added %player% to whitelist"
 # displays if successfuly removed player from whitelist
 # %player% for add player name
 removed-successfuly: "§aSuccessfuly removed %player% form whitelist"

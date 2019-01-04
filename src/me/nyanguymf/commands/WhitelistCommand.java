@@ -31,12 +31,15 @@ public class WhitelistCommand implements CommandExecutor {
         }
 
         if (args[0].equalsIgnoreCase("add")) {
-            if (args.length < 3) {
+            if (args.length < 2) {
                 sender.sendMessage(TemporalWhitelist.getMessage("add-usage"));
                 return true;
             }
 
-            wh.add(sender, args[1], args[2]);
+            if (args.length == 2)
+                wh.add(sender, args[1]);
+            else if (args.length >= 3)
+                wh.add(sender, args[1], args[2]);
             return true;
         }
 

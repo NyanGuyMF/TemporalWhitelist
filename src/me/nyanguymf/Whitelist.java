@@ -44,17 +44,15 @@ public class Whitelist {
     }
 
     public boolean isWhitelisted(String name) {
-        if (!tw.getPlayerCfg(name).contains("whitelisted")) {
+        if (!tw.getPlayerCfg(name).contains("whitelisted"))
             return false;
-        }
 
-        if (!tw.getPlayerCfg(name).getBoolean("whitelisted")) {
+        if (!tw.getPlayerCfg(name).getBoolean("whitelisted"))
             return false;
-        }
 
-        if (tw.getPlayerCfg(name).getLong("until") - System.currentTimeMillis() / 1000L <= 0) {
-            return false;
-        }
+        if (tw.getPlayerCfg(name).isSet("until"))
+            if (tw.getPlayerCfg(name).getLong("until") - System.currentTimeMillis() / 1000L <= 0)
+                return false;
 
         return true;
     }
@@ -64,13 +62,31 @@ public class Whitelist {
             long until = DateUtils.parseDateDiff(timeDiff, true);
 
             FileConfiguration playerYml = tw.getPlayerCfg(name);
+
             playerYml.set("whitelisted", true);
             playerYml.set("until", until);
             playerYml.save(new File(tw.getDataFolder() + File.separator + "players", name + ".yml"));
 
+            String  added   = TemporalWhitelist.getMessage("added-successfuly-until");
+                    added   = added.replaceAll("%player%", name); 
+                    added   = added.replaceAll("%until%", new Date(until).toString());
+
+            sender.sendMessage(added);
+        } catch (Exception e) {
+            e.printStackTrace();
+            sender.sendMessage(e.getMessage());
+        }
+    }
+
+    public void add(CommandSender sender, String name) {
+        try {
+            FileConfiguration playerYml = tw.getPlayerCfg(name);
+
+            playerYml.set("whitelisted", true);
+            playerYml.save(new File(tw.getDataFolder() + File.separator + "players", name + ".yml"));
+
             String  added   = TemporalWhitelist.getMessage("added-successfuly");
                     added   = added.replaceAll("%player%", name); 
-                    added   = added.replaceAll("%until%", new Date(until * 1000).toString());
 
             sender.sendMessage(added);
         } catch (Exception e) {
