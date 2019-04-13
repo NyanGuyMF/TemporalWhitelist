@@ -1,0 +1,9 @@
+name: TemporalWhitelist
+version: ${project.version}
+main: nyanguymf.whitelist.core.TemporalWhitelistPlugin
+
+author: NyanGuyMF
+
+commands:
+  whitelist:
+    aliases: ['temporalwhitelist', 'wh', 'whlist', 'twh', 'twhlist', 'tempwhlist', 'tempwh']
