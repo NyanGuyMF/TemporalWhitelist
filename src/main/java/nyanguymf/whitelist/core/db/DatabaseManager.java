@@ -22,6 +22,7 @@
  */
 package nyanguymf.whitelist.core.db;
 
+import static com.j256.ormlite.table.TableUtils.createTable;
 import static org.bukkit.Bukkit.getConsoleSender;
 import static org.bukkit.ChatColor.RED;
 
@@ -29,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 
@@ -66,6 +68,28 @@ public final class DatabaseManager {
                 + ex.getLocalizedMessage()
             );
         }
+        return this;
+    }
+
+    public DatabaseManager initDaos() {
+        try {
+            WhitelistedPlayer.initDao(DaoManager.createDao(conn, WhitelistedPlayer.class));
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return this;
+    }
+
+    public DatabaseManager createTables() {
+        try {
+            if (!WhitelistedPlayer.getDao().isTableExists()) {
+                createTable(WhitelistedPlayer.getDao());
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } catch (NullPointerException ignore) {}
+
         return this;
     }
 

@@ -22,14 +22,19 @@
  */
 package nyanguymf.whitelist.core;
 
+import static nyanguymf.whitelist.core.db.WhitelistedPlayer.allPlayers;
 import static org.bukkit.Bukkit.getConsoleSender;
+import static org.bukkit.Bukkit.getScheduler;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import nyanguymf.whitelist.core.commands.WhitelistCommand;
 import nyanguymf.whitelist.core.db.DatabaseManager;
+import nyanguymf.whitelist.core.db.WhitelistedPlayer;
 
 /** @author NyanGuyMF - Vasiliy Bely */
 public final class TemporalWhitelistPlugin extends JavaPlugin {
@@ -44,7 +49,10 @@ public final class TemporalWhitelistPlugin extends JavaPlugin {
             super.saveDefaultConfig();
         }
 
-        databaseManager = new DatabaseManager(super.getDataFolder()).connect();
+        databaseManager = new DatabaseManager(super.getDataFolder())
+                .connect()
+                .initDaos()
+                .createTables();
         try {
             messagesManager = MessagesManager.getInstance(
                 super.getDataFolder(),
@@ -59,6 +67,30 @@ public final class TemporalWhitelistPlugin extends JavaPlugin {
     }
 
     @Override public void onEnable() {
+        if ((messagesManager == null) || (databaseManager == null)) {
+            getConsoleSender().sendMessage(
+                "\u00a73TemporalWhitelist \u00a78» \u00a7cPlugin isn't enabled."
+            );
+            super.getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        new WhitelistCommand(messagesManager).register(this);
+
+        getScheduler().runTaskLaterAsynchronously(this, () -> {
+            Date currentDate = new Date();
+
+            for (WhitelistedPlayer player : allPlayers()) {
+                if (player.isWhitelisted() && (player.getUntil() != null)) {
+                    if (player.getUntil().after(currentDate)) {
+                        player.setUntil(null);
+                        player.setWhitelisted(false);
+                        player.save();
+                    }
+                }
+            }
+        }, 20 * 1_800); // run every 30 minutes
+
         getConsoleSender().sendMessage(
             "\u00a73TemporalWhitelist \u00a78» \u00a7aPlugin enabled."
         );

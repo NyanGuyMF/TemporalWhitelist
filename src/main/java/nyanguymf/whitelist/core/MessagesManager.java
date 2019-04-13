@@ -23,7 +23,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,10 +66,23 @@ public class MessagesManager extends BukkitYamlConfiguration {
     private Map<String, Map<String, String>> help = new HashMap<>();
 
     private Map<String, String> info = ImmutableMap.<String, String>builder()
+            .put("player-not-found-warn", "&eWarning! Player &c{0} &enot found.")
+            .put(
+                "not-whitelisted",
+                "&eYou're not whitelisted on this server.\n"
+                + "Contact with administration on website: (your website)"
+            )
+            .put("whitelisted", "&ePlayer &c{0} &esuccessfully added to whitelist.")
+            .put(
+                "whitelisted-until",
+                "&ePlayer &c{0} &esuccessfully added to whitelist until "
+                + "&b{year}&3-&b{month}&3-&b{day} {hour}&3:&b{min}&3:&b{sec}."
+            )
             .build();
 
     private Map<String, String> error = ImmutableMap.<String,String>builder()
             .put("no-permission", "&cYou have no permission for &6{0} &ccommand.")
+            .put("invalid-time-format", "&cYou've entered invalid time format: {0}.")
             .build();
 
     /**
@@ -102,6 +117,14 @@ public class MessagesManager extends BukkitYamlConfiguration {
             .addFilter(field -> !field.getName().startsWith("ignore"))
             .build()
         );
+
+        usage.put(
+            "whitelist",
+            ImmutableMap.<String,String>builder()
+                .put("whitelist", "&eEnter &c/help &efor more info.")
+                .put("add", "&e/wh add &6«&cplayer&6»")
+                .build()
+        );
     }
 
     protected static MessagesManager getInstance(
@@ -135,6 +158,85 @@ public class MessagesManager extends BukkitYamlConfiguration {
         }
 
         return MessagesManager.ignoreInstance;
+    }
+
+    /**
+     * Replaces "{0}", "{1}", "{n}" chunks in given String
+     * with appropriate argument (args[0], args[1], args[n]).
+     * <p>
+     * Example: String <tt>"Hello, {0}! I'm {1} c:"</tt>
+     * with arguments {@code {"Notch", "NyanGuyMF"}} will
+     * be <tt>"Hello, Notch! I'm NyanGuyMF c:"</tt>.
+     * <p>
+     * Returns <tt>null</tt> if given {@link String} message
+     * is <tt>null</tt>.
+     *
+     * @param   message     {@link String} to insert values into it.
+     * @param   args        Values to insert into String.
+     */
+    public static String args(String message, final String... args) {
+        if (message == null)
+            return message;
+
+        if (args.length == 0)
+            return message;
+
+        for (int c = 0; c < args.length; c++) {
+            message = message.replace("{" + c + "}", args[c]);
+        }
+
+        return message;
+    }
+
+    /**
+     * Translates user-friendly colors to default Bukkit colors.
+     * <p>
+     * Simply replaces all '&' characters in given string with
+     * '§' (ua7 in Unicode (u00a7)) character.
+     * <p>
+     * Returns <tt>null</tt> if given {@link String} message
+     * is <tt>null</tt>.
+     *
+     * @param   message     {@link String} to translate colors.
+     */
+    public static String colored(final String message) {
+        if (message == null)
+            return null;
+
+        return message.replace('&', '\u00a7');
+    }
+
+    /**
+     * Formats string with given time.
+     * <p>
+     * Will replace available placeholders in given string
+     * with time.
+     * <p>
+     * List of available placeholders:
+     * <ul>
+     *      <li><tt>{year}</tt></li>
+     *      <li><tt>{month}</tt></li>
+     *      <li><tt>{day}</tt></li>
+     *      <li><tt>{hour}</tt></li>
+     *      <li><tt>{min}</tt></li>
+     *      <li><tt>{sec}</tt></li>
+     * </ul>
+     *
+     * @param   str     {@link String} that you want to format.
+     * @param   date    Time that you want to insert.
+     * @return formated string.
+     */
+    public static String formatTime(final String str, final Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+
+        return str
+                .replace("{year}", String.valueOf(cal.get(Calendar.YEAR)))
+                .replace("{month}", String.valueOf(cal.get(Calendar.MONTH)))
+                .replace("{day}", String.valueOf(cal.get(Calendar.DAY_OF_MONTH)))
+                .replace("{hour}", String.valueOf(cal.get(Calendar.HOUR_OF_DAY)))
+                .replace("{min}", String.valueOf(cal.get(Calendar.MINUTE)))
+                .replace("{sec}", String.valueOf(cal.get(Calendar.SECOND)));
     }
 
     /**
@@ -369,51 +471,5 @@ public class MessagesManager extends BukkitYamlConfiguration {
             return colored(usage.get(command).get(subCommand));
         else
             return usage.get(command).get(subCommand);
-    }
-
-    /**
-     * Replaces "{0}", "{1}", "{n}" chunks in given String
-     * with appropriate argument (args[0], args[1], args[n]).
-     * <p>
-     * Example: String <tt>"Hello, {0}! I'm {1} c:"</tt>
-     * with arguments {@code {"Notch", "NyanGuyMF"}} will
-     * be <tt>"Hello, Notch! I'm NyanGuyMF c:"</tt>.
-     * <p>
-     * Returns <tt>null</tt> if given {@link String} message
-     * is <tt>null</tt>.
-     *
-     * @param   message     {@link String} to insert values into it.
-     * @param   args        Values to insert into String.
-     */
-    public static String args(String message, final String... args) {
-        if (message == null)
-            return message;
-
-        if (args.length == 0)
-            return message;
-
-        for (int c = 0; c < args.length; c++) {
-            message = message.replace("{" + c + "}", args[c]);
-        }
-
-        return message;
-    }
-
-    /**
-     * Translates user-friendly colors to default Bukkit colors.
-     * <p>
-     * Simply replaces all '&' characters in given string with
-     * '§' (ua7 in Unicode (u00a7)) character.
-     * <p>
-     * Returns <tt>null</tt> if given {@link String} message
-     * is <tt>null</tt>.
-     *
-     * @param   message     {@link String} to translate colors.
-     */
-    public static String colored(final String message) {
-        if (message == null)
-            return null;
-
-        return message.replace('&', '\u00a7');
     }
 }
