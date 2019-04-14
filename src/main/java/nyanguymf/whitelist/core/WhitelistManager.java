@@ -20,21 +20,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package nyanguymf.whitelist.core.commands;
-
-import nyanguymf.whitelist.commons.commands.CommandManager;
-import nyanguymf.whitelist.core.MessagesManager;
-import nyanguymf.whitelist.core.WhitelistManager;
+package nyanguymf.whitelist.core;
 
 /** @author NyanGuyMF - Vasiliy Bely */
-public final class WhitelistCommand extends CommandManager {
-    public WhitelistCommand(final MessagesManager messages, final WhitelistManager whManager) {
-        super("whitelist", messages.usage("whitelist", "whitelist"));
+public interface WhitelistManager {
+    /** Enables whitelist. */
+    void enable();
 
-        super.addSub(new AddCommand(messages));
-        super.addSub(new RemoveCommad(messages));
-        super.addSub(new EnableCommand(messages, whManager));
-        super.addSub(new DisableCommand(messages, whManager));
-        super.addSub(new InfoCommand(messages));
-    }
+    /** Disables whitelist. */
+    void disable();
+
+    /**
+     * Check is whitelist enabled.
+     *
+     * @return <tt>true</tt> if whitelist enabled.
+     */
+    boolean isWhitelistEnabled();
 }

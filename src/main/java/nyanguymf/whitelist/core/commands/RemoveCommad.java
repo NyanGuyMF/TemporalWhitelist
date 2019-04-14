@@ -22,19 +22,51 @@
  */
 package nyanguymf.whitelist.core.commands;
 
-import nyanguymf.whitelist.commons.commands.CommandManager;
+import static nyanguymf.whitelist.core.db.WhitelistedPlayer.isPlayerExists;
+import static nyanguymf.whitelist.core.db.WhitelistedPlayer.playerByName;
+
+import java.util.Date;
+
+import org.bukkit.command.CommandSender;
+
+import nyanguymf.whitelist.commons.commands.SubCommand;
 import nyanguymf.whitelist.core.MessagesManager;
-import nyanguymf.whitelist.core.WhitelistManager;
+import nyanguymf.whitelist.core.db.WhitelistedPlayer;
 
 /** @author NyanGuyMF - Vasiliy Bely */
-public final class WhitelistCommand extends CommandManager {
-    public WhitelistCommand(final MessagesManager messages, final WhitelistManager whManager) {
-        super("whitelist", messages.usage("whitelist", "whitelist"));
+final class RemoveCommad extends SubCommand {
+    private MessagesManager messages;
 
-        super.addSub(new AddCommand(messages));
-        super.addSub(new RemoveCommad(messages));
-        super.addSub(new EnableCommand(messages, whManager));
-        super.addSub(new DisableCommand(messages, whManager));
-        super.addSub(new InfoCommand(messages));
+    public RemoveCommad(final MessagesManager messages) {
+        super(
+            "remove", "twh.remove",
+            messages.usage("whitelist", "remove"), new String[] {"rm"}
+        );
+
+        this.messages = messages;
+    }
+
+    @Override public boolean execute(
+        final CommandSender sender, final String alias, final String[] args
+    ) {
+        if (!super.hasPermission(sender))
+            return false;
+
+        if (args.length == 0)
+            return false;
+
+        if (!isPlayerExists(args[0])) {
+            sender.sendMessage(messages.error("player-doesnt-exist", args[0]));
+            return true;
+        }
+
+        WhitelistedPlayer player = playerByName(args[0]);
+        player.setWhitelisted(false);
+        player.setUntil(new Date());
+        player.save();
+
+        sender.sendMessage(messages.info("player-removed", args[0]));
+
+        return true;
     }
 }

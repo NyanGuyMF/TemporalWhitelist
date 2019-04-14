@@ -23,11 +23,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -36,6 +39,8 @@ import de.exlll.configlib.configs.yaml.BukkitYamlConfiguration;
 /** @author NyanGuyMF */
 public class MessagesManager extends BukkitYamlConfiguration {
     private static MessagesManager ignoreInstance;
+
+    private Map<String, List<String>> multilineMessages = new HashMap<>();
 
     /**
      * Provides usage message for each plug-in command
@@ -66,23 +71,32 @@ public class MessagesManager extends BukkitYamlConfiguration {
     private Map<String, Map<String, String>> help = new HashMap<>();
 
     private Map<String, String> info = ImmutableMap.<String, String>builder()
-            .put("player-not-found-warn", "&eWarning! Player &c{0} &enot found.")
+            .put("player-not-found-warn", "&eWarning! Player &6«&c{0}&6» &enot found.")
+            .put("whitelisted", "&ePlayer &c{0} &esuccessfully added to whitelist.")
+            .put("player-removed", "&ePlayer &6«&c{0}&6»&e removed from whitelist")
+            .put("already-enabled", "&eWhitelist is already &aenabled&e.")
+            .put("already-disabled", "&eWhitelist is already &cdisabled&e.")
+            .put("disabled", "&eWhitelist was successfully &cdisabled&e.")
+            .put("enabled", "&eWhitelist was successfully &aenabled&e.")
+            .put("until", "&b{year}&3-&b{month}&3-&b{day} {hour}&3:&b{min}&3:&b{sec}")
+            .put("null", "&4null")
+            .put("false", "&cfalse")
+            .put("true", "&atrue")
             .put(
                 "not-whitelisted",
-                "&eYou're not whitelisted on this server.\n"
+                "&f\n&eYou're not whitelisted on this server.\n&f\n"
                 + "Contact with administration on website: (your website)"
             )
-            .put("whitelisted", "&ePlayer &c{0} &esuccessfully added to whitelist.")
             .put(
                 "whitelisted-until",
-                "&ePlayer &c{0} &esuccessfully added to whitelist until "
-                + "&b{year}&3-&b{month}&3-&b{day} {hour}&3:&b{min}&3:&b{sec}."
+                "&ePlayer &c{0} &esuccessfully added to whitelist until {1}."
             )
             .build();
 
     private Map<String, String> error = ImmutableMap.<String,String>builder()
             .put("no-permission", "&cYou have no permission for &6{0} &ccommand.")
             .put("invalid-time-format", "&cYou've entered invalid time format: {0}.")
+            .put("player-doesnt-exists", "&cPlayer &6{0} &cnot found.")
             .build();
 
     /**
@@ -118,11 +132,20 @@ public class MessagesManager extends BukkitYamlConfiguration {
             .build()
         );
 
+        multilineMessages.put("player-info", Arrays.asList(
+            "&ePlayer &6«&c{player-name}&6»",
+            "&eIs whitelisted: {is-whitelisted}",
+            "&eWhitelisted until: {until}"
+        ));
+
         usage.put(
             "whitelist",
             ImmutableMap.<String,String>builder()
                 .put("whitelist", "&eEnter &c/help &efor more info.")
                 .put("add", "&e/wh add &6«&cplayer&6»")
+                .put("remove", "&e/wh remove &6«&cplayer&6»")
+                .put("enable", "&e/wh enable|on")
+                .put("disable", "&e/wh disable|off")
                 .build()
         );
     }
@@ -237,6 +260,22 @@ public class MessagesManager extends BukkitYamlConfiguration {
                 .replace("{hour}", String.valueOf(cal.get(Calendar.HOUR_OF_DAY)))
                 .replace("{min}", String.valueOf(cal.get(Calendar.MINUTE)))
                 .replace("{sec}", String.valueOf(cal.get(Calendar.SECOND)));
+    }
+
+    public List<String> multiline(final String key) {
+        return multiline(key, true);
+    }
+
+    public List<String> multiline(final String key, final boolean isColored) {
+        if (!multilineMessages.containsKey(key))
+            return null;
+
+        if (isColored)
+            return multilineMessages.get(key).parallelStream()
+                .map(message -> colored(message))
+                .collect(Collectors.toList());
+        else
+            return multilineMessages.get(key);
     }
 
     /**

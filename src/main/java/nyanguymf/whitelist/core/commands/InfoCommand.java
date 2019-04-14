@@ -22,28 +22,23 @@
  */
 package nyanguymf.whitelist.core.commands;
 
-import static java.lang.System.currentTimeMillis;
 import static nyanguymf.whitelist.core.MessagesManager.formatTime;
 import static nyanguymf.whitelist.core.db.WhitelistedPlayer.isPlayerExists;
 import static nyanguymf.whitelist.core.db.WhitelistedPlayer.playerByName;
 
-import java.util.Date;
-
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 
 import nyanguymf.whitelist.commons.commands.SubCommand;
 import nyanguymf.whitelist.core.MessagesManager;
 import nyanguymf.whitelist.core.db.WhitelistedPlayer;
-import sh.okx.timeapi.api.TimeAPI;
 
 /** @author NyanGuyMF - Vasiliy Bely */
-final class AddCommand extends SubCommand {
+final class InfoCommand extends SubCommand {
     private MessagesManager messages;
 
-    public AddCommand(final MessagesManager messages) {
-        super("add", "twh.add", messages.usage("whitelist", "add"));
+    public InfoCommand(final MessagesManager messages) {
+        super("info", "twh.info", messages.usage("whitelist", "info"));
+
         this.messages = messages;
     }
 
@@ -56,53 +51,30 @@ final class AddCommand extends SubCommand {
         if (args.length == 0)
             return false;
 
-        // I thought about stream with map(player -> name), then sort & search
-        // or maybe just stream API usage, but it's too complicated method for this goal
-        // TODO: find other way if this will be time-consuming
-        boolean isPlayerFound = false;
-        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-            if (player.getName().equals(args[0])) {
-                isPlayerFound = true;
-                break;
-            }
+        if (!isPlayerExists(args[0])) {
+            sender.sendMessage(messages.error("player-doesnt-exists", args[0]));
+            return true;
         }
 
-        if (!isPlayerFound) {
-            sender.sendMessage(messages.info("player-not-found-warn", args[0]));
-        }
+        WhitelistedPlayer player = playerByName(args[0]);
 
-        Date untilDate = null;
+        String isWhitelisted = player.isWhitelisted()
+                ? messages.info("true")
+                : messages.info("false");
 
-        if (args.length > 1) {
-            try {
-                TimeAPI until = new TimeAPI(args[1]);
-                untilDate = new Date(currentTimeMillis() + until.getMilliseconds());
-            } catch (IllegalArgumentException ex) {
-                sender.sendMessage(messages.error("invalid-time-format", args[1]));
-                return true;
-            }
-        }
+        String until = player.getUntil() != null
+                ? formatTime(messages.info("until"), player.getUntil())
+                : messages.info("null");
 
-        WhitelistedPlayer player;
-        if (isPlayerExists(args[0])) {
-            player = playerByName(args[0]);
-            player.setWhitelisted(true);
-            player.setUntil(untilDate);
-            player.save();
-        } else {
-            player = new WhitelistedPlayer(args[0], untilDate);
-            player.setWhitelisted(true);
-            player.create();
-        }
-
-        if (untilDate != null) {
-            sender.sendMessage(messages.info(
-                "whitelisted-until", player.getName(),
-                formatTime(messages.info("until"), untilDate)
-            ));
-        } else {
-            sender.sendMessage(messages.info("whitelisted", player.getName()));
-        }
+        messages.multiline("player-info", false).stream()
+            .map(message -> {
+                return message
+                    .replace("&", "\u00a7")
+                    .replace("{player-name}", player.getName())
+                    .replace("{is-whitelisted}", isWhitelisted)
+                    .replace("until", until);
+            })
+            .forEach(message -> sender.sendMessage(message));
 
         return true;
     }

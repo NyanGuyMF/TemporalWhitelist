@@ -22,19 +22,42 @@
  */
 package nyanguymf.whitelist.core.commands;
 
-import nyanguymf.whitelist.commons.commands.CommandManager;
+import org.bukkit.command.CommandSender;
+
+import nyanguymf.whitelist.commons.commands.SubCommand;
 import nyanguymf.whitelist.core.MessagesManager;
 import nyanguymf.whitelist.core.WhitelistManager;
 
 /** @author NyanGuyMF - Vasiliy Bely */
-public final class WhitelistCommand extends CommandManager {
-    public WhitelistCommand(final MessagesManager messages, final WhitelistManager whManager) {
-        super("whitelist", messages.usage("whitelist", "whitelist"));
+final class DisableCommand extends SubCommand {
+    private WhitelistManager whManager;
+    private MessagesManager messages;
 
-        super.addSub(new AddCommand(messages));
-        super.addSub(new RemoveCommad(messages));
-        super.addSub(new EnableCommand(messages, whManager));
-        super.addSub(new DisableCommand(messages, whManager));
-        super.addSub(new InfoCommand(messages));
+    public DisableCommand(final MessagesManager messages, final WhitelistManager whManager) {
+        super(
+            "disable", "twh.disable",
+            messages.usage("wihtelist", "disable"), new String[] {"off"}
+        );
+
+        this.messages = messages;
+        this.whManager = whManager;
+    }
+
+    @Override public boolean execute(
+        final CommandSender sender, final String alias, final String[] args
+    ) {
+        if (!super.hasPermission(sender))
+            return false;
+
+        if (!whManager.isWhitelistEnabled()) {
+            sender.sendMessage(messages.info("already-disabled"));
+            return true;
+        }
+
+        whManager.disable();
+
+        sender.sendMessage(messages.info("disabled"));
+
+        return true;
     }
 }

@@ -35,9 +35,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import nyanguymf.whitelist.core.commands.WhitelistCommand;
 import nyanguymf.whitelist.core.db.DatabaseManager;
 import nyanguymf.whitelist.core.db.WhitelistedPlayer;
+import nyanguymf.whitelist.core.events.PlayerJoinHandler;
 
 /** @author NyanGuyMF - Vasiliy Bely */
-public final class TemporalWhitelistPlugin extends JavaPlugin {
+public final class TemporalWhitelistPlugin extends JavaPlugin implements WhitelistManager {
+    private boolean isEnabled = false;
     private DatabaseManager databaseManager;
     private MessagesManager messagesManager;
 
@@ -48,6 +50,8 @@ public final class TemporalWhitelistPlugin extends JavaPlugin {
         if (!new File(super.getDataFolder(), "config.yml").exists()) {
             super.saveDefaultConfig();
         }
+
+        isEnabled = super.getConfig().getBoolean("is-enabled", false);
 
         databaseManager = new DatabaseManager(super.getDataFolder())
                 .connect()
@@ -69,14 +73,16 @@ public final class TemporalWhitelistPlugin extends JavaPlugin {
     @Override public void onEnable() {
         if ((messagesManager == null) || (databaseManager == null)) {
             getConsoleSender().sendMessage(
-                "\u00a73TemporalWhitelist \u00a78» \u00a7cPlugin isn't enabled."
+                "\u00a73TemporalWhitelist \u00a78» \u00a7cPlugin wasn't enabled."
             );
             super.getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        new WhitelistCommand(messagesManager).register(this);
+        new WhitelistCommand(messagesManager, this).register(this);
+        new PlayerJoinHandler(messagesManager).register(this);
 
+        // update players's status in database
         getScheduler().runTaskLaterAsynchronously(this, () -> {
             Date currentDate = new Date();
 
@@ -94,9 +100,41 @@ public final class TemporalWhitelistPlugin extends JavaPlugin {
         getConsoleSender().sendMessage(
             "\u00a73TemporalWhitelist \u00a78» \u00a7aPlugin enabled."
         );
+
+        String isEnabled = this.isEnabled ? "\u00a7atrue" : "\u00a7cfalse";
+        getConsoleSender().sendMessage(
+            "\u00a73TemporalWhitelist \u00a78» \u00a7eWhitelist mode: "
+            + isEnabled
+        );
     }
 
     @Override public void onDisable() {
         databaseManager.close();
+        updateWhitelistConfig();
+    }
+
+    @Override public void enable() {
+        if (!isEnabled) {
+            isEnabled = true;
+        }
+        updateWhitelistConfig();
+    }
+
+    @Override public void disable() {
+        if (isEnabled) {
+            isEnabled = false;
+        }
+        updateWhitelistConfig();
+    }
+
+    @Override public boolean isWhitelistEnabled() {
+        return isEnabled;
+    }
+
+    private void updateWhitelistConfig() {
+        super.getConfig().set("is-enabled", isEnabled);
+        try {
+            super.getConfig().save(new File(super.getDataFolder(), "config.yml"));
+        } catch (IOException ignore) {}
     }
 }
