@@ -110,7 +110,7 @@ public abstract class CommandManager implements CommandExecutor, TabCompleter {
         final String alias, final String[] args
     ) {
         return subCommands.keySet().parallelStream()
-                .filter(subCommandName -> subCommandName.startsWith(alias))
+                .filter(subCommandName -> subCommandName.startsWith(args[0]))
                 .collect(toList());
     }
 
