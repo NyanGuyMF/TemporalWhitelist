@@ -25,15 +25,19 @@ package nyanguymf.whitelist.core;
 import static nyanguymf.whitelist.core.db.WhitelistedPlayer.allPlayers;
 import static org.bukkit.Bukkit.getConsoleSender;
 import static org.bukkit.Bukkit.getScheduler;
+import static org.bukkit.ChatColor.GREEN;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import nyanguymf.whitelist.commons.db.DatabaseManager;
+import nyanguymf.whitelist.commons.db.DatabaseManager.ConnectionStatus;
 import nyanguymf.whitelist.core.commands.WhitelistCommand;
-import nyanguymf.whitelist.core.db.DatabaseManager;
+import nyanguymf.whitelist.core.db.DatabaseManagerFactory;
 import nyanguymf.whitelist.core.db.WhitelistedPlayer;
 import nyanguymf.whitelist.core.events.PlayerJoinHandler;
 
@@ -53,10 +57,12 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
 
         isEnabled = super.getConfig().getBoolean("is-enabled", false);
 
-        databaseManager = new DatabaseManager(super.getDataFolder())
-                .connect()
-                .initDaos()
-                .createTables();
+        databaseManager = DatabaseManagerFactory.loadDatabaseManager(this);
+
+        if (databaseManager.getStatus() == ConnectionStatus.CONNECTED) {
+            Bukkit.getConsoleSender().sendMessage(GREEN + "Connected to database.");
+        }
+
         try {
             messagesManager = MessagesManager.getInstance(
                 super.getDataFolder(),
@@ -82,7 +88,6 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
         new WhitelistCommand(messagesManager, this).register(this);
         new PlayerJoinHandler(messagesManager).register(this);
 
-        // update players's status in database
         getScheduler().runTaskLaterAsynchronously(this, () -> {
             Date currentDate = new Date();
 
@@ -109,7 +114,9 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
     }
 
     @Override public void onDisable() {
-        databaseManager.close();
+        try {
+            databaseManager.close();
+        } catch (IOException ignore) {}
         updateWhitelistConfig();
     }
 

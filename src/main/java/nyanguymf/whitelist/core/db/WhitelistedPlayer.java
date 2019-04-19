@@ -22,6 +22,8 @@
  */
 package nyanguymf.whitelist.core.db;
 
+import static com.j256.ormlite.table.TableUtils.createTable;
+
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -58,6 +60,13 @@ public final class WhitelistedPlayer {
 
     protected static void initDao(final Dao<WhitelistedPlayer, String> dao) {
         if (WhitelistedPlayer.dao == null) {
+            try {
+                if (!dao.isTableExists()) {
+                    createTable(dao);
+                }
+            } catch (SQLException ex) {
+                System.err.printf("Unable to create table: %s\n",ex.getLocalizedMessage());
+            }
             WhitelistedPlayer.dao = dao;
         }
     }
