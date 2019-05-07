@@ -22,6 +22,7 @@
  */
 package nyanguymf.whitelist.core;
 
+import static nyanguymf.whitelist.core.db.DatabaseManagerFactory.loadDatabaseManager;
 import static nyanguymf.whitelist.core.db.WhitelistedPlayer.allPlayers;
 import static org.bukkit.Bukkit.getConsoleSender;
 import static org.bukkit.Bukkit.getScheduler;
@@ -37,17 +38,29 @@ import org.bukkit.plugin.java.JavaPlugin;
 import nyanguymf.whitelist.commons.db.DatabaseManager;
 import nyanguymf.whitelist.commons.db.DatabaseManager.ConnectionStatus;
 import nyanguymf.whitelist.core.commands.WhitelistCommand;
-import nyanguymf.whitelist.core.db.DatabaseManagerFactory;
 import nyanguymf.whitelist.core.db.WhitelistedPlayer;
 import nyanguymf.whitelist.core.events.PlayerJoinHandler;
 
 /** @author NyanGuyMF - Vasiliy Bely */
 public final class TemporalWhitelistPlugin extends JavaPlugin implements WhitelistManager {
+    private static TemporalWhitelistPlugin instance;
     private boolean isEnabled = false;
-    private DatabaseManager databaseManager;
+    private static DatabaseManager databaseManager;
     private MessagesManager messagesManager;
 
+    public static boolean reconnect() {
+        TemporalWhitelistPlugin.databaseManager = loadDatabaseManager(TemporalWhitelistPlugin.instance);
+
+        if (TemporalWhitelistPlugin.databaseManager.isConnected()) {
+            System.out.println("Reestablished connection with database");
+        }
+
+        return TemporalWhitelistPlugin.databaseManager.isConnected();
+    }
+
     @Override public void onLoad() {
+        TemporalWhitelistPlugin.instance = this;
+
         if (!super.getDataFolder().exists()) {
             super.getDataFolder().mkdir();
         }
@@ -57,9 +70,9 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
 
         isEnabled = super.getConfig().getBoolean("is-enabled", false);
 
-        databaseManager = DatabaseManagerFactory.loadDatabaseManager(this);
+        TemporalWhitelistPlugin.databaseManager = loadDatabaseManager(this);
 
-        if (databaseManager.getStatus() == ConnectionStatus.CONNECTED) {
+        if (TemporalWhitelistPlugin.databaseManager.getStatus() == ConnectionStatus.CONNECTED) {
             Bukkit.getConsoleSender().sendMessage(GREEN + "Connected to database.");
         }
 
@@ -77,7 +90,7 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
     }
 
     @Override public void onEnable() {
-        if ((messagesManager == null) || (databaseManager == null)) {
+        if ((messagesManager == null) || (TemporalWhitelistPlugin.databaseManager == null)) {
             getConsoleSender().sendMessage(
                 "\u00a73TemporalWhitelist \u00a78» \u00a7cPlugin wasn't enabled."
             );
@@ -115,7 +128,7 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
 
     @Override public void onDisable() {
         try {
-            databaseManager.close();
+            TemporalWhitelistPlugin.databaseManager.close();
         } catch (IOException ignore) {}
         updateWhitelistConfig();
     }

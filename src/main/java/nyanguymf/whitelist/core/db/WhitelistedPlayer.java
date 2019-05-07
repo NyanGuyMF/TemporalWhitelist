@@ -33,6 +33,8 @@ import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import nyanguymf.whitelist.core.TemporalWhitelistPlugin;
+
 /** @author NyanGuyMF - Vasiliy Bely */
 @DatabaseTable(tableName="players")
 public final class WhitelistedPlayer {
@@ -75,6 +77,9 @@ public final class WhitelistedPlayer {
         try {
             return WhitelistedPlayer.dao.queryForAll();
         } catch (SQLException ex) {
+            if (TemporalWhitelistPlugin.reconnect())
+                return allPlayers();
+
             ex.printStackTrace();
             return null;
         }
@@ -93,6 +98,9 @@ public final class WhitelistedPlayer {
         try {
             return WhitelistedPlayer.dao.queryForId(playerName);
         } catch (SQLException ex) {
+            if (TemporalWhitelistPlugin.reconnect())
+                return playerByName(playerName);
+
             ex.printStackTrace();
             return null;
         }
@@ -102,6 +110,9 @@ public final class WhitelistedPlayer {
         try {
             return WhitelistedPlayer.dao.idExists(player);
         } catch (SQLException e) {
+            if (TemporalWhitelistPlugin.reconnect())
+                return isPlayerExists(player);
+
             e.printStackTrace();
             return false;
         }
@@ -111,6 +122,9 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.create(this);
         } catch (SQLException ex) {
+            if (TemporalWhitelistPlugin.reconnect())
+                return create();
+
             ex.printStackTrace();
             return false;
         }
@@ -122,6 +136,9 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.update(this);
         } catch (SQLException ex) {
+            if (TemporalWhitelistPlugin.reconnect())
+                return save();
+
             ex.printStackTrace();
             return false;
         }
@@ -133,6 +150,9 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.refresh(this);
         } catch (SQLException ex) {
+            if (TemporalWhitelistPlugin.reconnect())
+                return reload();
+
             ex.printStackTrace();
             return false;
         }
@@ -144,6 +164,9 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.delete(this);
         } catch (SQLException ex) {
+            if (TemporalWhitelistPlugin.reconnect())
+                return delete();
+
             ex.printStackTrace();
             return false;
         }
