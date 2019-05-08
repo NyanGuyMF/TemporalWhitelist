@@ -61,7 +61,7 @@ final class AddCommand extends SubCommand {
         // TODO: find other way if this will be time-consuming
         boolean isPlayerFound = false;
         for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-            if (player.getName().equals(args[0])) {
+            if ((player.getName() != null) && player.getName().equals(args[0])) {
                 isPlayerFound = true;
                 break;
             }
