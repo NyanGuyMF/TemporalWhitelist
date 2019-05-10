@@ -24,6 +24,7 @@ package nyanguymf.whitelist.core;
 
 import static nyanguymf.whitelist.core.db.DatabaseManagerFactory.loadDatabaseManager;
 import static nyanguymf.whitelist.core.db.WhitelistedPlayer.allPlayers;
+import static nyanguymf.whitelist.core.db.WhitelistedPlayer.playerByName;
 import static org.bukkit.Bukkit.getConsoleSender;
 import static org.bukkit.Bukkit.getScheduler;
 import static org.bukkit.ChatColor.GREEN;
@@ -33,6 +34,8 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import nyanguymf.whitelist.commons.db.DatabaseManager;
@@ -48,14 +51,13 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
     private static DatabaseManager databaseManager;
     private MessagesManager messagesManager;
 
-    public static boolean reconnect() {
-        TemporalWhitelistPlugin.databaseManager = loadDatabaseManager(TemporalWhitelistPlugin.instance);
+    public static boolean reload() {
+        PluginManager pmanager = TemporalWhitelistPlugin.instance.getServer().getPluginManager();
 
-        if (TemporalWhitelistPlugin.databaseManager.isConnected()) {
-            System.out.println("Reestablished connection with database");
-        }
+        pmanager.disablePlugin(TemporalWhitelistPlugin.instance);
+        pmanager.enablePlugin(TemporalWhitelistPlugin.instance);
 
-        return TemporalWhitelistPlugin.databaseManager.isConnected();
+        return TemporalWhitelistPlugin.instance.isEnabled();
     }
 
     @Override public void onLoad() {
@@ -101,7 +103,7 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
         new WhitelistCommand(messagesManager, this).register(this);
         new PlayerJoinHandler(messagesManager).register(this);
 
-        getScheduler().runTaskLaterAsynchronously(this, () -> {
+        getScheduler().runTaskTimerAsynchronously(this, () -> {
             Date currentDate = new Date();
 
             for (WhitelistedPlayer player : allPlayers()) {
@@ -113,7 +115,7 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
                     }
                 }
             }
-        }, 20 * 1_800); // run every 30 minutes
+        }, 0, 20 * 1_800); // run every 30 minutes
 
         getConsoleSender().sendMessage(
             "\u00a73TemporalWhitelist \u00a78» \u00a7aPlugin enabled."
@@ -124,6 +126,15 @@ public final class TemporalWhitelistPlugin extends JavaPlugin implements Whiteli
             "\u00a73TemporalWhitelist \u00a78» \u00a7eWhitelist mode: "
             + isEnabled
         );
+
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            WhitelistedPlayer player = playerByName(onlinePlayer.getName());
+            if ((player != null) && !player.isWhitelisted()) {
+                onlinePlayer.kickPlayer(
+                    messagesManager.info("not-whitelisted").replace("\\n", "\n")
+                );
+            }
+        }
     }
 
     @Override public void onDisable() {

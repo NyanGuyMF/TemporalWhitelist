@@ -77,7 +77,7 @@ public final class WhitelistedPlayer {
         try {
             return WhitelistedPlayer.dao.queryForAll();
         } catch (SQLException ex) {
-            if (TemporalWhitelistPlugin.reconnect())
+            if (TemporalWhitelistPlugin.reload())
                 return allPlayers();
 
             ex.printStackTrace();
@@ -98,7 +98,7 @@ public final class WhitelistedPlayer {
         try {
             return WhitelistedPlayer.dao.queryForId(playerName);
         } catch (SQLException ex) {
-            if (TemporalWhitelistPlugin.reconnect())
+            if (TemporalWhitelistPlugin.reload())
                 return playerByName(playerName);
 
             ex.printStackTrace();
@@ -110,7 +110,7 @@ public final class WhitelistedPlayer {
         try {
             return WhitelistedPlayer.dao.idExists(player);
         } catch (SQLException e) {
-            if (TemporalWhitelistPlugin.reconnect())
+            if (TemporalWhitelistPlugin.reload())
                 return isPlayerExists(player);
 
             e.printStackTrace();
@@ -122,7 +122,7 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.create(this);
         } catch (SQLException ex) {
-            if (TemporalWhitelistPlugin.reconnect())
+            if (TemporalWhitelistPlugin.reload())
                 return create();
 
             ex.printStackTrace();
@@ -136,7 +136,7 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.update(this);
         } catch (SQLException ex) {
-            if (TemporalWhitelistPlugin.reconnect())
+            if (TemporalWhitelistPlugin.reload())
                 return save();
 
             ex.printStackTrace();
@@ -150,7 +150,7 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.refresh(this);
         } catch (SQLException ex) {
-            if (TemporalWhitelistPlugin.reconnect())
+            if (TemporalWhitelistPlugin.reload())
                 return reload();
 
             ex.printStackTrace();
@@ -164,7 +164,7 @@ public final class WhitelistedPlayer {
         try {
             WhitelistedPlayer.dao.delete(this);
         } catch (SQLException ex) {
-            if (TemporalWhitelistPlugin.reconnect())
+            if (TemporalWhitelistPlugin.reload())
                 return delete();
 
             ex.printStackTrace();
